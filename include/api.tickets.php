@@ -178,6 +178,105 @@ class TicketApiController extends ApiController {
         return $this->createTicket($data);
     }
 
+    function get($format) {
+        if(!($key=$this->requireApiKey())) {
+            return $this->exerr(401, __('API key not authorized'));
+        }
+
+        $request = $this->getRequest($format);
+
+        if (!array_key_exists('email', $request)) {
+            $this->response(400, json_encode(array('error' => 'missing email parameter')));
+            return;
+        }
+
+        $query = Ticket::objects();
+        $tickets = [];
+        if (array_key_exists('email', $request)) {
+            $query
+                ->filter(array('user__emails__address' => $request['email']));
+        }
+
+        $tickets = $query->values(
+            'ticket_id', 'number', 'created', 'isanswered', 'source', 'status_id',
+            'status__state', 'status__name', 'cdata__subject', 'dept_id',
+            'dept__name', 'dept__ispublic', 'user__default_email__address', 'lastupdate'
+        )
+        ->order_by('-created')
+        ->all();
+
+        $this->response(200, json_encode($tickets));
+    }
+
+    function getSingle($ticket_number, $format) {
+        if(!($key=$this->requireApiKey())) {
+            return $this->exerr(401, __('API key not authorized'));
+        }
+
+        $request = $this->getRequest($format);
+
+        if (!array_key_exists('email', $request)) {
+            $this->response(400, json_encode(array('error' => 'missing email parameter')));
+            return;
+        }
+
+        # Checks for existing ticket with that number
+        $id = Ticket::getIdByNumber($ticket_number, $request['email']);
+        if ($id <= 0) {
+            return $this->response(404, __("Ticket not found"));
+        }
+
+        # Load ticket and send response
+        $ticket = Ticket::lookup($id);
+        $response = array(
+            'number' => $ticket->getNumber(),
+            'lastupdate' => $ticket->getEffectiveDate(),
+            'cdata__subject' => $ticket->getSubject(),
+            'status__state' => $ticket->getStatus()->getState(),
+            //'priority' => $ticket->getPriority(),
+            //'department' => $ticket->getDeptName(),
+            //'created_at' => $ticket->getCreateDate(),
+            //'user_name' => $ticket->getName()->getFull(),
+            //'user_email' => $ticket->getEmail(),
+            //'user_phone' => $ticket->getPhoneNumber(),
+            //'source' => $ticket->getSource(),
+            //'ip' => $ticket->getIP(),
+            //'sla' => $ticket->getSLA()->getName(),
+            //'due_timestamp' => $ticket->getEstDueDate(),
+            //'close_timestamp' => $ticket->getCloseDate(),
+            //'help_topic' => $ticket->getHelpTopic(),
+            //'last_message_timestamp' => $ticket->getLastMsgDate(),
+            //'last_response_timestamp' => $ticket->getLastRespDate(),
+        );
+        //$b = array();
+        //foreach ($ticket->getAssignees() as $a) {
+            //if (method_exists($a,"getFull"))
+                //array_push($b, $a->getFull());
+            //else
+                //array_push($b, $a);
+        //}
+        //array_push($response, array('assigned_to' => $b));
+        //unset($b);
+        # get thread entries
+        $tcount = $ticket->getThreadCount();
+        $tcount += $ticket->getNumNotes();
+        $types = array('M', 'R', 'N');
+        $threadTypes = array('M'=>'message','R'=>'response', 'N'=>'note');
+        $thread_entries = $ticket->getThread()->getEntries()->filter(array('type__in' => $types));
+        //var_dump($thread_entries);die();
+        $response['thread_count'] = $tcount;
+        $response['thread_entries'] = [];
+        foreach ($thread_entries as $tentry) {
+            $response['thread_entries'][] = array(
+                //'type' => $threadTypes[$tentry->getType()],
+                'created_at' => $tentry->getCreateDate(),
+                //'title' => $tentry->getTitle(),
+                'user_name' => $tentry->getName()->getFull(),
+                'body' => $tentry->getBody()->getClean(),
+            );
+        }
+        $this->response(200, json_encode($response), $contentType="application/json");
+    }
 }
 
 //Local email piping controller - no API key required!

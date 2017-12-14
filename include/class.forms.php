@@ -1070,7 +1070,7 @@ class FormField {
             return array();
     }
 
-    function render($options=array()) {
+    function render($staff = true, $title = false, $options = Array()) {
         $rv = $this->getWidget()->render($options);
         if ($v = $this->get('visibility')) {
             $v->emitJavascript($this);
