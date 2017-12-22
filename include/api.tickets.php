@@ -201,11 +201,21 @@ class TicketApiController extends ApiController {
             'ticket_id', 'number', 'created', 'isanswered', 'source', 'status_id',
             'status__state', 'status__name', 'cdata__subject', 'dept_id',
             'dept__name', 'dept__ispublic', 'user__default_email__address', 'lastupdate'
-        )
-        ->order_by('-created')
-        ->all();
+        );
 
-        $this->response(200, json_encode($tickets));
+        $count_tickets = $tickets;
+        $count = $count_tickets->count();
+        
+        $tickets = $tickets->order_by('-created');
+
+        $tickets = $tickets->all();
+
+        $response = array(
+            'total' => $count,
+            'tickets' => $tickets,
+        );
+
+        $this->response(200, json_encode($response));
     }
 
     function getSingle($ticket_number, $format) {
@@ -267,15 +277,105 @@ class TicketApiController extends ApiController {
         $response['thread_count'] = $tcount;
         $response['thread_entries'] = [];
         foreach ($thread_entries as $tentry) {
+            $poster = $tentry->getName();
+            if (is_object($poster)) {
+                $poster = $poster->getFull();
+            }
+            //var_dump($tentry->getAttachmentUrls());
+            $attachments = [];
+            foreach ($tentry->getAttachmentUrls() as $k => $attachment) {
+                $attachments[] = [
+                    'filename' => $attachment['filename'],
+                    'download_url' => $attachment['download_url'],
+                ];
+            }
+            //var_dump($tentry->getName());
+            //echo '----';
             $response['thread_entries'][] = array(
                 //'type' => $threadTypes[$tentry->getType()],
                 'created_at' => $tentry->getCreateDate(),
                 //'title' => $tentry->getTitle(),
-                'user_name' => $tentry->getName()->getFull(),
+                'user_name' => $poster,
+                'from_staff' => !is_null($tentry->getStaff()),
                 'body' => $tentry->getBody()->getClean(),
+                'attachments' => $attachments,
             );
         }
         $this->response(200, json_encode($response), $contentType="application/json");
+    }
+
+    function replyToTicket($ticket_number, $format) {
+        if(!($key=$this->requireApiKey())) {
+            return $this->exerr(401, __('API key not authorized'));
+        }
+
+        $request = $this->getRequest($format);
+
+        if (!array_key_exists('email', $request)) {
+            $this->response(400, json_encode(array('error' => 'missing email parameter')));
+            return;
+        }
+
+        if (!array_key_exists('message', $request)) {
+            $this->response(400, json_encode(array('error' => 'missing message parameter')));
+            return;
+        }
+
+        # Checks for existing ticket with that number
+        $id = Ticket::getIdByNumber($ticket_number, $request['email']);
+        if ($id <= 0) {
+            return $this->response(404, __("Ticket not found"));
+        }
+
+        # Load ticket and send response
+        $ticket = Ticket::lookup($id);
+        $alert = true;
+        $vars = [
+            'poster' => $ticket->getName(),
+            'threadId' => $ticket->getThread()->getId(),
+            'response' => nl2br($request['message']),
+        ];
+
+        $errors = [];
+        //attachments
+        if (array_key_exists('files', $request)) {
+            $vars['cannedattachments'] = $this->saveAttachments($request['files'], $errors);
+        }
+
+        if (empty($errors)) {
+            $reply_response = $ticket->postReply($vars, $errors, $alert);
+        }
+        //var_dump($errors);die();
+        //var_dump($reply_response);die();
+
+        if (empty($errors)) {
+            $this->response(200, json_encode([]), $contentType="application/json");
+        }
+        else {
+            $this->response(500, json_encode($errors), $contentType="application/json");
+        }
+    }
+
+    function saveAttachments($attachments, &$errors) {
+        //var_dump($attachments);die();
+        $attachment_ids = [];
+        foreach ($attachments as $attachment) {
+            $file = [
+                'name' => $attachment['name'],
+                'data' => $attachment['content'],
+                'encoding' => 'base64',
+            ];
+            $f = AttachmentFile::create($file);
+
+            if ($f) {
+                $attachment_ids[] = $f->getId();
+            }
+            else {
+                $errors[] = "cant upload file ".$attachment['name'];
+            }
+            //if (!($F = AttachmentFile::upload($file)))
+        }
+        return $attachment_ids;
     }
 }
 
