@@ -129,6 +129,12 @@ class TicketApiController extends ApiController {
         # Create the ticket with the data (attempt to anyway)
         $errors = array();
 
+        //attachments
+        if (array_key_exists('files', $data)) {
+            $data['attachments'] = $this->saveAttachments($data['files'], $errors);
+            unset ($data['files']);
+        }
+
         $ticket = Ticket::create($data, $errors, $data['source'], $autorespond, $alert);
         # Return errors (?)
         if (count($errors)) {
@@ -360,6 +366,8 @@ class TicketApiController extends ApiController {
         //var_dump($attachments);die();
         $attachment_ids = [];
         foreach ($attachments as $attachment) {
+            //$attachment_ids[$attachment['name']] = $attachment['content'];
+            //continue;
             $file = [
                 'name' => $attachment['name'],
                 'data' => $attachment['content'],
