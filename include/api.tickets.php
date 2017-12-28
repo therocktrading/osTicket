@@ -14,6 +14,10 @@ class TicketApiController extends ApiController {
             "attachments" => array("*" =>
                 array("name", "type", "data", "encoding", "size")
             ),
+            //using 'attachments' will result in osticket manipulating the attachments, so we use 'files' instead
+            "files" => array("*" =>
+                array("name", "content")
+            ),
             "message", "ip", "priorityId"
         );
         # Fetch dynamic form field names for the given help topic and add
