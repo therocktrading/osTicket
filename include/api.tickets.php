@@ -18,6 +18,7 @@ class TicketApiController extends ApiController {
             "files" => array("*" =>
                 array("name", "content")
             ),
+            "deptId",
             "message", "ip", "priorityId"
         );
         # Fetch dynamic form field names for the given help topic and add
@@ -200,6 +201,7 @@ class TicketApiController extends ApiController {
             return;
         }
 
+        TicketForm::ensureDynamicDataView();
         $query = Ticket::objects();
         $tickets = [];
         if (array_key_exists('email', $request)) {
@@ -240,6 +242,7 @@ class TicketApiController extends ApiController {
             return;
         }
 
+        TicketForm::ensureDynamicDataView();
         # Checks for existing ticket with that number
         $id = Ticket::getIdByNumber($ticket_number, $request['email']);
         if ($id <= 0) {
