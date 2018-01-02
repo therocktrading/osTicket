@@ -372,7 +372,7 @@ TicketForm::ensureDynamicDataView();
 
 // Select pertinent columns
 // ------------------------------------------------------------
-$tickets->values('lock__staff_id', 'staff_id', 'isoverdue', 'team_id',
+$tickets->values('lock__staff_id', 'lock__staff__firstname', 'lock__staff__lastname', 'staff_id', 'isoverdue', 'team_id',
 'ticket_id', 'number', 'cdata__subject', 'user__default_email__address',
 'source', 'cdata__:priority__priority_color', 'cdata__:priority__priority_desc', 'status_id', 'status__name', 'status__state', 'dept_id', 'dept__name', 'user__name', 'lastupdate', 'isanswered', 'staff__firstname', 'staff__lastname', 'team__name');
 
@@ -559,7 +559,7 @@ return false;">
                     echo $base; ?>px; max-height: 1.2em"
                     class="<?php if ($flag) { ?>Icon <?php echo $flag; ?>Ticket <?php } ?>link truncate"
                     <?php if ($flag) { ?> title="<?php echo ucfirst($flag); ?> Ticket" <?php } ?>
-                    href="tickets.php?id=<?php echo $T['ticket_id']; ?>"><?php echo $subject; ?></div>
+                    href="tickets.php?id=<?php echo $T['ticket_id']; ?>"><?php echo ($flag && $flag == 'locked') ? '(Lock: '.$T['lock__staff__firstname'].' '.$T['lock__staff__lastname'].') ' : ''; echo $subject; ?></div>
 <?php               if ($T['attachment_count'])
                         echo '<i class="small icon-paperclip icon-flip-horizontal" data-toggle="tooltip" title="'
                             .$T['attachment_count'].'"></i>';
