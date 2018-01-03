@@ -2,7 +2,7 @@
 $title=($cfg && is_object($cfg) && $cfg->getTitle())
     ? $cfg->getTitle() : 'osTicket :: '.__('Support Ticket System');
 if ($ost && is_object($ost) && !empty($ost->getPageTitle())) {
-    $title = $ost->getPageTitle().' - osTicket';
+    $title = $ost->getPageTitle();
 }
 $signin_url = ROOT_PATH . "login.php"
     . ($thisclient ? "?e=".urlencode($thisclient->getEmail()) : "");
