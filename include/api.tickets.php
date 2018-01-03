@@ -214,6 +214,11 @@ class TicketApiController extends ApiController {
                 ->filter(array('status__state' => $request['status']));
         }
 
+        if (array_key_exists('deptId', $request)) {
+            $query
+                ->filter(array('dept_id' => $request['deptId']));
+        }
+
         $tickets = $query->values(
             'ticket_id', 'number', 'created', 'isanswered', 'source', 'status_id',
             'status__state', 'status__name', 'cdata__subject', 'dept_id',
