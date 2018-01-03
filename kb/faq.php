@@ -27,6 +27,7 @@ if(!$faq && $_REQUEST['cid'] && !($category=Category::lookup($_REQUEST['cid'])))
 $inc='knowledgebase.inc.php'; //FAQs landing page.
 if($faq && $faq->isPublished()) {
     $inc='faq.inc.php';
+    $ost->setPageTitle($faq->getQuestion());
 } elseif($category && $category->isPublic() && $_REQUEST['a']!='search') {
     $inc='faq-category.inc.php';
 }
