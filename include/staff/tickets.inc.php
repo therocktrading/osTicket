@@ -631,6 +631,11 @@ return false;">
         echo '&nbsp;<i class="help-tip icon-question-sign" href="#export"></i></div>';
     } ?>
     </form>
+    <?php
+    if ($thisstaff && $thisstaff->isAdmin()) {
+        include STAFFINC_DIR . 'online-agents.inc.php';
+    }
+    ?>
 </div>
 
 <div style="display:none;" class="dialog" id="confirm-action">
