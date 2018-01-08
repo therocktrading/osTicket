@@ -632,7 +632,7 @@ return false;">
     } ?>
     </form>
     <?php
-    if ($thisstaff && $thisstaff->isAdmin()) {
+    if ($thisstaff && $thisstaff->isManager()) {
         include STAFFINC_DIR . 'online-agents.inc.php';
     }
     ?>
