@@ -215,8 +215,11 @@ class TicketApiController extends ApiController {
         }
 
         if (array_key_exists('deptId', $request)) {
+            if (!is_array($request['deptId'])) {
+                $request['deptId'] = [$request['deptId']];
+            }
             $query
-                ->filter(array('dept_id' => $request['deptId']));
+                ->filter(array('dept_id__in' => $request['deptId']));
         }
 
         $tickets = $query->values(
