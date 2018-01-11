@@ -29,6 +29,7 @@ $dispatcher = patterns('',
          )),
         url_get("^/tickets\.(?P<format>json)$", array('api.tickets.php:TicketApiController','get')),
         url_get("^/tickets/(?P<ticket_number>\d*)\.(?P<format>json)$", array('api.tickets.php:TicketApiController','getSingle')),
+        url_get("^/tickets/(?P<ticket_number>\d*)/attachments/(?P<attachment_id>\d*)\.(?P<format>json)$", array('api.tickets.php:TicketApiController','getAttachment')),
         url_post("^/tickets/(?P<ticket_number>\d*)\.(?P<format>json)$", array('api.tickets.php:TicketApiController','replyToTicket'))
         );
 

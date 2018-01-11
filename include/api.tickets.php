@@ -297,7 +297,7 @@ class TicketApiController extends ApiController {
         $tcount = $ticket->getThreadCount();
         $tcount += $ticket->getNumNotes();
         $types = array('M', 'R', 'N');
-        $threadTypes = array('M'=>'message','R'=>'response', 'N'=>'note');
+        //$threadTypes = array('M'=>'message','R'=>'response', 'N'=>'note');
         $thread_entries = $ticket->getThread()->getEntries()->filter(array('type__in' => $types));
         //var_dump($thread_entries);die();
         $response['thread_count'] = $tcount;
@@ -309,10 +309,12 @@ class TicketApiController extends ApiController {
             }
             //var_dump($tentry->getAttachmentUrls());
             $attachments = [];
-            foreach ($tentry->getAttachmentUrls() as $k => $attachment) {
+            foreach ($tentry->getAttachments()->all() as $k => $attachment) {
                 $attachments[] = [
-                    'filename' => $attachment['filename'],
-                    'download_url' => $attachment['download_url'],
+                    'id' => $attachment->file->id,
+                    'filename' => $attachment->file->name,
+                    'download_url' => $attachment->file->getDownloadUrl(),
+                    //'key' => $attachment->file->key,
                 ];
             }
             //var_dump($tentry->getName());
@@ -328,6 +330,50 @@ class TicketApiController extends ApiController {
             );
         }
         $this->response(200, json_encode($response), $contentType="application/json");
+    }
+
+    function getAttachment($ticket_number, $attachment_id, $format)
+    {
+        if(!($key=$this->requireApiKey())) {
+            return $this->exerr(401, __('API key not authorized'));
+        }
+
+        $request = $this->getRequest($format);
+
+        if (!array_key_exists('email', $request)) {
+            $this->response(400, json_encode(array('error' => 'missing email parameter')));
+            return;
+        }
+
+        TicketForm::ensureDynamicDataView();
+        # Checks for existing ticket with that number
+        $id = Ticket::getIdByNumber($ticket_number, $request['email']);
+        if ($id <= 0) {
+            return $this->response(404, __("Ticket not found"));
+        }
+
+        # Load ticket and send response
+        $ticket = Ticket::lookup($id);
+
+        //cycle through ticket's thread entries to see if the requested attachment is among the ticket's thread entries attachments
+        $types = array('M', 'R', 'N');
+        //$threadTypes = array('M'=>'message','R'=>'response', 'N'=>'note');
+        $thread_entries = $ticket->getThread()->getEntries()->filter(array('type__in' => $types));
+
+        $file = AttachmentFile::lookup((int) $attachment_id);
+
+        foreach ($thread_entries as $tentry) {
+            foreach ($tentry->getAttachments()->all() as $k => $attachment) {
+                if ($attachment->file->id == $file->getId()) {
+                    $response = [
+                        'filename' => $file->getName(),
+                        'data' => base64_encode($file->getData()),
+                    ];
+                    $this->response(200, json_encode($response), $contentType="application/json");
+                }
+            }
+        }
+        return $this->response(404, __("File not found"));
     }
 
     function replyToTicket($ticket_number, $format) {
