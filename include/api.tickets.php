@@ -19,7 +19,7 @@ class TicketApiController extends ApiController {
                 array("name", "content")
             ),
             "deptId" => array(),
-            "message", "ip", "priorityId"
+            "message", "ip", "priorityId", "status"
         );
         # Fetch dynamic form field names for the given help topic and add
         # the names to the supported request structure
