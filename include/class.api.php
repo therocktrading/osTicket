@@ -254,6 +254,8 @@ class ApiController {
                     $this->validateRequestStructure($info, $structure[$search], "$prefix$key/", $strict);
                     continue;
                 }
+            } elseif (array_search($info, $structure) !== false) {
+                continue;
             } elseif (in_array($key, $structure)) {
                 continue;
             }

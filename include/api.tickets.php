@@ -18,7 +18,7 @@ class TicketApiController extends ApiController {
             "files" => array("*" =>
                 array("name", "content")
             ),
-            "deptId",
+            "deptId" => array(),
             "message", "ip", "priorityId"
         );
         # Fetch dynamic form field names for the given help topic and add
@@ -29,6 +29,20 @@ class TicketApiController extends ApiController {
             foreach ($forms as $form)
                 foreach ($form->getDynamicFields() as $field)
                     $supported[] = $field->get('name');
+        }
+
+        //fetch dynamic departments
+        if (isset($data['deptId']) && is_array($data['deptId'])) {
+            foreach ($data['deptId'] as $deptId) {
+                $dept = Dept::lookup($deptId);
+                if ($dept) {
+                    $supported['deptId'][] = $deptId;
+                }
+            }
+        }
+        else {
+            unset($supported['deptId']);
+            $supported[] = 'deptId';
         }
 
         # Ticket form fields
