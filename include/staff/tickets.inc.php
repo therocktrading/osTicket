@@ -448,6 +448,11 @@ return false;">
     </div>
 </div>
 <div class="clear"></div>
+<?php
+if ($thisstaff && $thisstaff->isManager()) {
+    include STAFFINC_DIR . 'online-agents.inc.php';
+}
+?>
 <form action="tickets.php" method="POST" name='tickets' id="tickets">
 <?php csrf_token(); ?>
  <input type="hidden" name="a" value="mass_process" >
@@ -631,11 +636,6 @@ return false;">
         echo '&nbsp;<i class="help-tip icon-question-sign" href="#export"></i></div>';
     } ?>
     </form>
-    <?php
-    if ($thisstaff && $thisstaff->isManager()) {
-        include STAFFINC_DIR . 'online-agents.inc.php';
-    }
-    ?>
 </div>
 
 <div style="display:none;" class="dialog" id="confirm-action">
