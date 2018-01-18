@@ -346,8 +346,7 @@ class TicketApiController extends ApiController {
         $this->response(200, json_encode($response), $contentType="application/json");
     }
 
-    function getAttachment($ticket_number, $attachment_id, $format)
-    {
+    function getAttachment($ticket_number, $attachment_id, $format) {
         if(!($key=$this->requireApiKey())) {
             return $this->exerr(401, __('API key not authorized'));
         }
@@ -417,9 +416,10 @@ class TicketApiController extends ApiController {
         $ticket = Ticket::lookup($id);
         $alert = true;
         $vars = [
-            'poster' => $ticket->getName(),
+            'userId' => $ticket->getUser()->getId(),
             'threadId' => $ticket->getThread()->getId(),
-            'response' => nl2br($request['message']),
+            'message' => nl2br($request['message']),
+            'source' => 'API',
         ];
 
         $errors = [];
@@ -429,7 +429,7 @@ class TicketApiController extends ApiController {
         }
 
         if (empty($errors)) {
-            $reply_response = $ticket->postReply($vars, $errors, $alert);
+            $reply_response = $ticket->postMessage($vars, $errors, $alert);
         }
         //var_dump($errors);die();
         //var_dump($reply_response);die();
