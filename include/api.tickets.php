@@ -216,7 +216,7 @@ class TicketApiController extends ApiController {
         }
 
         TicketForm::ensureDynamicDataView();
-        $query = Ticket::objects();
+        $query = TicketModel::objects();
         $tickets = [];
         if (array_key_exists('email', $request)) {
             $query
@@ -245,7 +245,10 @@ class TicketApiController extends ApiController {
         $count_tickets = $tickets;
         $count = $count_tickets->count();
         
-        $tickets = $tickets->order_by('-created');
+        $tickets->order_by('-created');
+        $tickets->annotate(array(
+            'thread_count' => SqlAggregate::COUNT('thread__entries'),
+        ));
 
         $tickets = $tickets->all();
 
