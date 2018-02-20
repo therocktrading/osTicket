@@ -22,6 +22,7 @@ require_once(INCLUDE_DIR.'class.csrf.php'); //CSRF token class.
 require_once(INCLUDE_DIR.'class.migrater.php');
 require_once(INCLUDE_DIR.'class.plugin.php');
 require_once INCLUDE_DIR . 'class.message.php';
+require_once INCLUDE_DIR . 'custom_helper.php';
 
 define('LOG_WARN',LOG_WARNING);
 
@@ -56,8 +57,9 @@ class osTicket {
         require_once(INCLUDE_DIR.'class.config.php'); //Config helper
         require_once(INCLUDE_DIR.'class.company.php');
 
-        if (!defined('DISABLE_SESSION') || !DISABLE_SESSION)
+        if ((!defined('DISABLE_SESSION') || !DISABLE_SESSION) && !is_robot()) {
             $this->session = osTicketSession::start(SESSION_TTL); // start DB based session
+        } 
 
         $this->config = new OsticketConfig();
 
