@@ -183,6 +183,10 @@ abstract class SessionBackend {
         return $this->update($id, $i['touched'] ? session_encode() : $data);
     }
 
+    function cleanup() {
+        $this->gc(0);
+    }
+
     abstract function read($id);
     abstract function update($id, $data);
     abstract function destroy($id);
@@ -243,6 +247,10 @@ extends SessionBackend {
 
     function destroy($id){
         return SessionData::objects()->filter(['session_id' => $id])->delete();
+    }
+
+    function cleanup() {
+        self::gc(0);
     }
 
     function gc($maxlife){
