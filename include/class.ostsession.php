@@ -128,17 +128,17 @@ class osTicketSession {
     //custom therock: returns staff users who have been active in the past 15 minutes. based on session_expire. can be easily modified to use a different interval.
     function get_active_staff() {
         $sql='
-            SELECT st.staff_id, st.username, st.firstname, st.lastname, se.session_expire
+         SELECT st.staff_id, st.username, st.firstname, st.lastname, sj.max_session_expire
             FROM '.STAFF_TABLE.' st
-            JOIN '.SESSION_TABLE.' se ON se.user_id = st.staff_id
-            JOIN
+            RIGHT JOIN
                 (SELECT user_id, MAX(session_expire) AS max_session_expire
                   FROM '.SESSION_TABLE.'
-                  GROUP BY user_id
+                  WHERE user_id != \'0\'
+                  AND session_expire > DATE_ADD(NOW(), INTERVAL "23:45" HOUR_MINUTE)
+                  GROUP BY user_id, session_expire
                 ) AS sj
-                ON (sj.user_id, sj.max_session_expire) = (st.staff_id, se.session_expire)
-            WHERE se.user_id > 0 AND se.session_expire > DATE_ADD(NOW(), INTERVAL "23:45" HOUR_MINUTE)
-            ORDER BY session_expire DESC
+                ON sj.user_id = st.staff_id
+            ORDER BY max_session_expire DESC
         ';
 
         $users=array();
